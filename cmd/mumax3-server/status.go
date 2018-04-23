@@ -56,7 +56,6 @@ const templText = `
 {{end}}
 
 <html>
-
 <head>
 	<style>
 		body{font-family:monospace; margin-left:5%; margin-top:1em}
@@ -68,6 +67,7 @@ const templText = `
 		.RUNNING{font-weight: bold; color:blue}
 		.QUEUED{color:black}
 		.FINISHED{color: grey}
+		.active, .collapsible:hover {cursor:pointer; font-weight:normal; background-color:#eee; width:50%;}
 	</style>
 	<meta http-equiv="refresh" content="60">
 </head>
@@ -140,7 +140,7 @@ Uptime: {{.Uptime}} <br/>
 	<h3>Users</h3><p>
 	<table>
 	{{range $k,$v := .Users}} <tr>
-		<td>{{$k}}</td><td>{{$v.FairShare}} GPU-seconds</td><td>{{with .HasJob}} has {{else}} no {{end}} queued jobs</td>
+		<td>{{$k}}</td><td>{{printf "%.2f" $v.FairShare}} GPU-seconds</td><td>{{with .HasJob}} has {{else}} no {{end}} queued jobs</td>
 	</tr>{{end}}
 	</table>
 	<b>Next job for:</b> {{.NextUser}}
@@ -150,17 +150,22 @@ Uptime: {{.Uptime}} <br/>
 		<button onclick='doEvent("LoadJobs", "")'>Reload all</button> (consider reloading just your own files). <br/>
 		<button onclick='doEvent("WakeupWatchdog", "")'>Wake-up Watchdog</button> (re-queue dead simulations right now).
 	{{range $k,$v := .Users}}
-		<a id="{{$k}}"></a><h3>{{$k}}</h3><p>
-	
-
+		<a id="{{$k}}"></a>
+		<h2 title="Click to show/hide" class="collapsible" onclick='this.classList.toggle("active");var cont=this.nextElementSibling;cont.style.display=(cont.style.display==="none"?"block":"none");'>
+		&dtrif; {{$k}}</h2>
+		<div>
+		<b>Upload new job</b>
+			<form enctype="multipart/form-data" action="./upload/" method="post" enctype="multipart/form-data">
+				<input type="file" name="uploadfile"/>
+				<input type="hidden" name="user" value="{{$k}}"/>
+				<input type="submit" value="upload"/>
+			</form>
 		<b>Jobs</b>
-		<button onclick='doEvent("LoadUserJobs", "{{$k}}")'>Reload</button> (only needed when you changed your files on disk)
-
-		<table> {{range $v.Jobs}} {{template "Job" .}} {{end}} </table>
-		</p>
+			<button onclick='doEvent("LoadUserJobs", "{{$k}}")'>Reload</button> (only needed when you changed your files on disk)
+			<table> {{range $v.Jobs}} {{template "Job" .}} {{end}} </table>
+		</div>
 	{{end}}
 	</p>
-
 </body>
 </html>
 `
